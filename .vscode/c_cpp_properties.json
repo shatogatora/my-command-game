@@ -1,0 +1,36 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\MinGW\\bin\\gcc.exe",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "gcc-x86"
+        },
+        {
+            "name": "g++_exe",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/mingw64/bin/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:/mingw64/bin/g++.exe",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "gcc-x86"
+        }
+    ],
+    "version": 4
+}

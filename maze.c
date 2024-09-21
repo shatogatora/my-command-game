@@ -1,8 +1,15 @@
 #include <stdio.h>
 
+#define STAGE 2 //ステージの数
 #define MAZE_ROW    5      //迷路の行数
 #define MAZE_COLUMN 5      //迷路の列数
 
+// 実行するとき
+// 同名のexeファイルを削除
+// gcc -o maze maze.c
+// ./maze
+// あるいは次でも可
+// gcc -o maze maze.c ; ./maze
 
 //プレイヤー
 typedef struct
@@ -79,13 +86,13 @@ void MazeDraw(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COL
   }
 }
 //方向
-enum MazeDirection{UP, DOWN, LEFT, RIGHT, Invalid}; 
+enum MazeDirection { UP = 1, DOWN, LEFT, RIGHT, Invalid = -1 };
 
 //プレイヤー移動
 void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COLUMN])
 {
   char buf[100];
-  int  direction = -1;
+  int  direction = Invalid;
 
   printf("%d:上\n", UP);
   printf("%d:下\n", DOWN);
@@ -96,13 +103,14 @@ void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][
   fgets(buf, sizeof(buf), stdin);      //文字列で入力を読み込む
   sscanf(buf, "%d", &direction);        //数字にできる場合は変換(できなければ何もしない)
 
-  while(direction < 0 || direction > (Invalid - 1)) //入力が正しい場合まで繰り返す
+  while (direction < UP || direction > RIGHT) //不正な入力を検知
   {
     printf("入力が不正です。再入力してください:");
     fgets(buf, sizeof(buf), stdin);
     sscanf(buf, "%d", &direction);
   }
 
+  // プレイヤーの移動処理
   switch(direction){
     //上移動
   case UP:
@@ -217,40 +225,140 @@ int MazeGoalCheck(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW][MAZE
   return 0;
 }
 
-int main(void)
+
+// 迷路を表示するメインとなる関数
+void MazeGame(int stage)
 {
   //プレイヤー
   MazePlayer player;
 
   //迷路
-  MazeBlock maze[MAZE_ROW][MAZE_COLUMN] = 
+  MazeBlock maze[STAGE][MAZE_ROW][MAZE_COLUMN] = 
     {
-      { {START, TRUE } , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
-      { {WALL , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
-      { {WALL , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
-      { {PATH , FALSE} , {PATH , FALSE}, {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
-      { {WALL , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {GOAL , TRUE } },
+      { //STAGE1
+        { {START, TRUE } , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
+        { {WALL , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
+        { {WALL , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
+        { {PATH , FALSE} , {PATH , FALSE}, {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
+        { {WALL , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {GOAL , TRUE } },
+      },
+
+      { //STAGE2
+        { {PATH , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
+        { {PATH , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {PATH , FALSE} },
+        { {START, TRUE } , {PATH , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {GOAL , TRUE } },
+        { {PATH , FALSE} , {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
+        { {PATH , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
+      }
     };
 
 
    //プレイヤー初期化
-  if(MazePlayerInit(&player.row, &player.column, maze) == -1)
+  if(MazePlayerInit(&player.row, &player.column, maze[stage]) == -1)
   {
     //関数MazePlayerInitが-1を返すとき初期化に失敗している
     //よって、この時点でプログラムを終了し、迷路の表示は行わない
-    return 0;
+    return;
   }
 
-  while(MazeGoalCheck(player.row, player.column, maze) != 1) //ゴールするまで移動を繰り返す
+  while(MazeGoalCheck(player.row, player.column, maze[stage]) != 1) //ゴールするまで移動を繰り返す
   {
     //迷路表示
-    MazeDraw(player.row, player.column, maze);
+    MazeDraw(player.row, player.column, maze[stage]);
     //プレイヤー移動
-    MazePlayerMove(&player.row, &player.column, maze);
+    MazePlayerMove(&player.row, &player.column, maze[stage]);
   } 
 
   //迷路最終結果表示
-  MazeDraw(player.row, player.column, maze);
+  MazeDraw(player.row, player.column, maze[stage]);
+}
+
+
+//メニュー
+enum MazeMenu {STAGE1 = 1, STAGE2, EXIT = 0};
+
+//タイトル
+int MazeTitle()
+{
+  char buf[100];
+  int menu = -1;
+
+  printf("\n\n***迷路ゲーム***\n\n");
+
+  printf("メニュー\n");
+  printf("%d:ステージ1\n", STAGE1);
+  printf("%d:ステージ2\n", STAGE2);
+  printf("%d:終了\n", EXIT);
+
+  while (1) // 無限ループで正しい入力を待つ
+  {
+    printf("メニューを選んでください。：");
+    fgets(buf, sizeof(buf), stdin);
+    int result = sscanf(buf, "%d", &menu);
+
+    // sscanf が成功したかどうかを確認
+    if (result == 1 && menu >= EXIT && menu <= STAGE2) // 有効な範囲をチェック
+    {
+      break; // 有効な入力の場合、ループを抜ける
+    }
+    else
+    {
+      printf("入力が不正です。再入力してください:\n");
+    }
+  }
+
+  return menu; // 有効な値を返す
+}
+
+
+int main(void)
+{
+  int menu;
+  int stage = 0; //ステージを初期化
+
+  while(1)
+  {
+    //メニュー選択      
+    menu = MazeTitle();
+    printf("\n");
+
+    if(menu == EXIT) //EXITならwhileループを抜けて終了
+    {
+      break;
+    }
+    else
+    {
+      //ステージ設定
+      switch(menu)
+      {
+      case STAGE1:
+        stage = 1;
+        break;
+
+      case STAGE2:
+        stage = 2;
+        break;
+
+      default:
+        stage = 0; // 不正な場合は初期化
+        break;
+      }
+    }
+
+    // ステージが設定されているか確認
+    if (stage > 0)
+    {
+      // ゲーム開始
+      printf("ステージ%d\n", stage);
+      MazeGame(stage - 1); // インデックスを0ベースにする
+    }
+    else
+    {
+      printf("無効なステージです。\n");
+    }
+
+    //ゲームが終わるとwhileループの先頭にもどる
+  }
 
   return 0;
 }

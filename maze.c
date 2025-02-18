@@ -30,7 +30,7 @@ typedef struct
 
 
 //プレイヤー初期化
-int MazePlayerInit(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COLUMN])
+int MazePlayerInit(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW * MAZE_COLUMN])
 {
   int i, j;
 
@@ -38,7 +38,7 @@ int MazePlayerInit(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][M
   {
     for(j = 0;  j < MAZE_COLUMN; j++) //列
     {
-      if(maze[i][j].kind == START) //スタート地点ならばプレイヤーの位置に設定する
+      if(maze[MAZE_COLUMN * i + j].kind == START) //スタート地点ならばプレイヤーの位置に設定する
       {
         *playerRow    = i;
         *playerColumn = j;
@@ -53,7 +53,7 @@ int MazePlayerInit(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][M
 }
 
 //迷路表示
-void MazeDraw(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COLUMN])
+void MazeDraw(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW * MAZE_COLUMN])
 {
   int i, j;
 
@@ -65,13 +65,13 @@ void MazeDraw(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COL
       {
         printf("P");
       }
-      else if(maze[i][j].flag == FALSE) //ブロックが判明していない場合
+      else if(maze[MAZE_COLUMN * i + j].flag == FALSE) //ブロックが判明していない場合
       {
         printf("?");
       }
       else
       {
-        switch(maze[i][j].kind)
+        switch(maze[MAZE_COLUMN * i + j].kind)
         {
         case WALL:
           printf("■"); break; //壁
@@ -89,7 +89,7 @@ void MazeDraw(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COL
 enum MazeDirection { UP = 1, DOWN, LEFT, RIGHT, Invalid = -1 };
 
 //プレイヤー移動
-void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COLUMN])
+void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW * MAZE_COLUMN])
 {
   char buf[100];
   int  direction = Invalid;
@@ -117,9 +117,9 @@ void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][
   {
     if(*playerRow - 1 >= 0) //迷路の範囲外でないことを確認
     {
-      maze[*playerRow - 1][*playerColumn].flag = TRUE; //ブロックの種類が判明
+      maze[MAZE_COLUMN * ((*playerRow) - 1) + (*playerColumn)].flag = TRUE; //ブロックの種類が判明
 
-      if(maze[*playerRow - 1][*playerColumn].kind != WALL) //壁かどうか確認
+      if(maze[MAZE_COLUMN * ((*playerRow) - 1) + (*playerColumn)].kind != WALL) //壁かどうか確認
       {
         *playerRow -= 1; //移動
         printf("\n上に移動しました。\n");
@@ -142,9 +142,9 @@ void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][
   {
     if(*playerRow + 1 < MAZE_ROW)
     {
-      maze[*playerRow + 1][*playerColumn].flag = TRUE;
+      maze[MAZE_COLUMN * ((*playerRow) + 1) + (*playerColumn)].flag = TRUE;
 
-      if(maze[*playerRow + 1][*playerColumn].kind != WALL)
+      if(maze[MAZE_COLUMN * ((*playerRow) + 1) + (*playerColumn)].kind != WALL)
       {
         *playerRow += 1;
         printf("\n下に移動しました。\n");
@@ -167,9 +167,9 @@ void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][
   {
     if(*playerColumn - 1 >= 0)
     {
-      maze[*playerRow][*playerColumn - 1].flag = TRUE;
+      maze[MAZE_COLUMN * (*playerRow) + ((*playerColumn) - 1)].flag = TRUE;
 
-      if(maze[*playerRow][*playerColumn - 1].kind != WALL)
+      if(maze[MAZE_COLUMN * (*playerRow) + ((*playerColumn) - 1)].kind != WALL)
       {
         *playerColumn -= 1;
         printf("\n左に移動しました。\n");
@@ -192,9 +192,9 @@ void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][
   {
     if(*playerColumn + 1 < MAZE_COLUMN)
     {
-      maze[*playerRow][*playerColumn + 1].flag = TRUE;
+      maze[MAZE_COLUMN * (*playerRow) + ((*playerColumn) + 1)].flag = TRUE;
 
-      if(maze[*playerRow][*playerColumn + 1].kind != WALL)
+      if(maze[MAZE_COLUMN * (*playerRow) + ((*playerColumn) + 1)].kind != WALL)
       {
         *playerColumn += 1;
         printf("\n右に移動しました。\n");
@@ -215,9 +215,9 @@ void MazePlayerMove(int *playerRow, int *playerColumn, MazeBlock maze[MAZE_ROW][
 }
 
 //ゴール判定
-int MazeGoalCheck(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW][MAZE_COLUMN])
+int MazeGoalCheck(int playerRow, int playerColumn, MazeBlock maze[MAZE_ROW * MAZE_COLUMN])
 {
-  if(maze[playerRow][playerColumn].kind == GOAL) //プレイヤー位置がゴール地点に等しい
+  if(maze[MAZE_COLUMN * playerRow + playerColumn].kind == GOAL) //プレイヤー位置がゴール地点に等しい
   {
     printf("ゴール!\n");
     return 1;
@@ -233,7 +233,7 @@ void MazeGame(int stage)
   MazePlayer player;
 
   //迷路
-  MazeBlock maze[STAGE][MAZE_ROW][MAZE_COLUMN] = 
+  MazeBlock maze[MAZE_ROW * MAZE_COLUMN] = 
     {
       { //STAGE1
         { {START, TRUE } , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
@@ -241,16 +241,15 @@ void MazeGame(int stage)
         { {WALL , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
         { {PATH , FALSE} , {PATH , FALSE}, {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
         { {WALL , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {GOAL , TRUE } },
-      },
-
-      { //STAGE2
-        { {PATH , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
-        { {PATH , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {PATH , FALSE} },
-        { {START, TRUE } , {PATH , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {GOAL , TRUE } },
-        { {PATH , FALSE} , {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
-        { {PATH , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
       }
-    };
+
+      //{ //STAGE2
+      //  { {PATH , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
+      //  { {PATH , FALSE} , {WALL , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {PATH , FALSE} },
+      //  { {START, TRUE } , {PATH , FALSE}, {PATH , FALSE}, {WALL , FALSE}, {GOAL , TRUE } },
+      //  { {PATH , FALSE} , {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE}, {WALL , FALSE} },
+      //  { {PATH , FALSE} , {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE}, {PATH , FALSE} },
+      };
 
 
    //プレイヤー初期化
